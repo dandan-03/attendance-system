@@ -1,13 +1,29 @@
-body { font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 1200px; margin: auto; background-color: #f0f2f5; color: #333; }
-h1 { color: #1a73e8; margin: 0; }
+body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f0f2f5; color: #333; }
 
-.container { display: flex; gap: 20px; flex-wrap: wrap; }
+/* HEADER */
+.header {
+    background: white; padding: 15px 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0;
+}
+.header h1 { margin: 0; font-size: 1.5rem; color: #1a73e8; }
+.header-controls { display: flex; gap: 10px; align-items: center; }
+
+/* NAV BUTTONS */
+.nav-btn {
+    text-decoration: none; background: #007bff; color: white; padding: 8px 16px;
+    border-radius: 20px; font-weight: bold; font-size: 0.9rem; transition: 0.2s;
+}
+.nav-btn:hover { opacity: 0.9; }
+
+/* MAIN LAYOUT */
+.container { display: flex; gap: 20px; flex-wrap: wrap; padding: 30px; max-width: 1200px; margin: auto; }
 .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 300px; }
 
 input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
 button { width: 100%; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
 button:hover { opacity: 0.9; }
 
+/* LIST ITEMS */
 .schedule-item { background: #f8f9fa; border-left: 4px solid #6610f2; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
 .delete-btn { background: #dc3545; color: white; width: auto; padding: 4px 10px; font-size: 0.8em; }
 
@@ -15,5 +31,6 @@ ul { list-style: none; padding: 0; }
 li { background: #f8f9fa; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; }
 .date-control { background-color: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #d2e3fc; }
 
-#loginScreen { max-width: 400px; margin: 100px auto; text-align: center; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+#loginScreen { max-width: 400px; margin: 100px auto; text-align: center; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-top: 50px; }
 #dashboardScreen { display: none; }
+#logoutBtn { background-color: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; width: auto;}
