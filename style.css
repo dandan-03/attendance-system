@@ -1,26 +1,121 @@
-body { font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 1000px; margin: auto; background-color: #f0f2f5; color: #333; }
-h1 { text-align: center; color: #1a73e8; }
+/* style.css */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    background-color: #f0f2f5; 
+    color: #333;
+}
 
-.container { display: flex; gap: 20px; flex-wrap: wrap; }
-.card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 300px; }
+/* --- NEW HEADER BAR --- */
+.header {
+    background: white;
+    padding: 15px 30px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
 
-input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 6px; }
-button { background-color: #1a73e8; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; border-radius: 6px; font-weight: bold; margin-top: 5px; }
-button:hover { background-color: #1557b0; }
+.header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1a73e8;
+}
 
-#logoutBtn { background-color: #dc3545; width: auto; float: right; }
+.header-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
 
-#accessPanel { border: 2px solid #ffc107; display: none; } 
-#unlockPanel { text-align: center; padding: 20px; border: 2px dashed #ccc; background: #fffbe6; }
-.user-item { background: #fff; border-bottom: 1px solid #eee; padding: 8px; display: flex; justify-content: space-between; align-items: center; }
-.remove-user-btn { background: #dc3545; padding: 5px 10px; font-size: 0.8em; width: auto; margin:0; }
+/* Settings Icon */
+#settingsBtn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #555;
+    padding: 5px;
+    transition: transform 0.2s;
+}
+#settingsBtn:hover { transform: rotate(90deg); color: #1a73e8; }
 
-.schedule-item { background: #f8f9fa; border-left: 4px solid #6610f2; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
-.delete-btn { background: #dc3545; color: white; border: none; padding: 4px 10px; font-size: 0.8em; width: auto; margin: 0; border-radius: 4px;}
+#logoutBtn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
 
-#loginScreen { max-width: 400px; margin: 100px auto; text-align: center; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-#dashboardScreen { display: none; }
+/* --- MAIN LAYOUT --- */
+.container { 
+    display: flex; 
+    gap: 20px; 
+    flex-wrap: wrap; 
+    padding: 30px;
+    max-width: 1200px;
+    margin: auto;
+}
 
+.card { 
+    background: white; 
+    padding: 25px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    flex: 1; 
+    min-width: 300px;
+}
+
+/* --- MODAL (POPUP) STYLES --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none; /* Hidden by default */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #aaa;
+}
+.close-modal:hover { color: #333; }
+
+/* Existing Styles */
+input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+button { width: 100%; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
+.schedule-item { background: #f8f9fa; border-left: 4px solid #6610f2; padding: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
+.delete-btn { background: #dc3545; color: white; width: auto; padding: 4px 10px; font-size: 0.8em; }
+.date-control { background-color: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #d2e3fc; }
 ul { list-style: none; padding: 0; }
 li { background: #f8f9fa; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; }
-.date-control { background-color: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #d2e3fc; }
+#loginScreen { max-width: 400px; margin: 100px auto; text-align: center; background: white; padding: 40px; border-radius: 12px; }
+#dashboardScreen { display: none; }
+.user-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; align-items: center;}
+.remove-user-btn { background: #dc3545; color: white; width: auto; padding: 5px 10px; font-size: 0.8em; }
+
+#unlockPanel { text-align: center; padding: 20px; background: #fffbe6; border-radius: 8px; border: 1px dashed #ffc107; }
+#accessPanel { display: none; }
