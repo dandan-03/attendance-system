@@ -1,12 +1,12 @@
-/* style.css */
+/* style.css - UPDATED VERSION */
 body { 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    font-family: 'Segoe UI', sans-serif; 
     margin: 0; 
     background-color: #f0f2f5; 
     color: #333;
 }
 
-/* --- NEW HEADER BAR --- */
+/* --- HEADER BAR --- */
 .header {
     background: white;
     padding: 15px 30px;
@@ -19,17 +19,8 @@ body {
     z-index: 100;
 }
 
-.header h1 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: #1a73e8;
-}
-
-.header-controls {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
+.header h1 { margin: 0; font-size: 1.5rem; color: #1a73e8; }
+.header-controls { display: flex; gap: 15px; align-items: center; }
 
 /* Settings Icon */
 #settingsBtn {
@@ -73,11 +64,11 @@ body {
     min-width: 300px;
 }
 
-/* --- MODAL (POPUP) STYLES --- */
+/* --- MODAL (POPUP) STYLES - THIS IS WHAT WAS MISSING --- */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.5); /* Dimmed background */
     display: none; /* Hidden by default */
     justify-content: center;
     align-items: center;
@@ -104,18 +95,23 @@ body {
 }
 .close-modal:hover { color: #333; }
 
-/* Existing Styles */
+/* --- GENERAL INPUTS --- */
 input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
 button { width: 100%; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
-.schedule-item { background: #f8f9fa; border-left: 4px solid #6610f2; padding: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
-.delete-btn { background: #dc3545; color: white; width: auto; padding: 4px 10px; font-size: 0.8em; }
-.date-control { background-color: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #d2e3fc; }
-ul { list-style: none; padding: 0; }
-li { background: #f8f9fa; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; }
-#loginScreen { max-width: 400px; margin: 100px auto; text-align: center; background: white; padding: 40px; border-radius: 12px; }
-#dashboardScreen { display: none; }
+
+/* --- PANELS --- */
+#unlockPanel { text-align: center; padding: 20px; background: #fffbe6; border-radius: 8px; border: 1px dashed #ffc107; }
+#accessPanel { display: none; }
+
 .user-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; align-items: center;}
 .remove-user-btn { background: #dc3545; color: white; width: auto; padding: 5px 10px; font-size: 0.8em; }
 
-#unlockPanel { text-align: center; padding: 20px; background: #fffbe6; border-radius: 8px; border: 1px dashed #ffc107; }
-#accessPanel { display: none; }
+.schedule-item { background: #f8f9fa; border-left: 4px solid #6610f2; padding: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
+.delete-btn { background: #dc3545; color: white; width: auto; padding: 4px 10px; font-size: 0.8em; }
+
+ul { list-style: none; padding: 0; }
+li { background: #f8f9fa; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; }
+.date-control { background-color: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #d2e3fc; }
+
+#loginScreen { max-width: 400px; margin: 100px auto; text-align: center; background: white; padding: 40px; border-radius: 12px; }
+#dashboardScreen { display: none; }
