@@ -1,0 +1,26 @@
+body { font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 1000px; margin: auto; background-color: #f0f2f5; color: #333; }
+h1 { text-align: center; color: #1a73e8; }
+
+.container { display: flex; gap: 20px; flex-wrap: wrap; }
+.card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 300px; }
+
+input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 6px; }
+button { background-color: #1a73e8; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; border-radius: 6px; font-weight: bold; margin-top: 5px; }
+button:hover { background-color: #1557b0; }
+
+#logoutBtn { background-color: #dc3545; width: auto; float: right; }
+
+#accessPanel { border: 2px solid #ffc107; display: none; } 
+#unlockPanel { text-align: center; padding: 20px; border: 2px dashed #ccc; background: #fffbe6; }
+.user-item { background: #fff; border-bottom: 1px solid #eee; padding: 8px; display: flex; justify-content: space-between; align-items: center; }
+.remove-user-btn { background: #dc3545; padding: 5px 10px; font-size: 0.8em; width: auto; margin:0; }
+
+.schedule-item { background: #f8f9fa; border-left: 4px solid #6610f2; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
+.delete-btn { background: #dc3545; color: white; border: none; padding: 4px 10px; font-size: 0.8em; width: auto; margin: 0; border-radius: 4px;}
+
+#loginScreen { max-width: 400px; margin: 100px auto; text-align: center; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+#dashboardScreen { display: none; }
+
+ul { list-style: none; padding: 0; }
+li { background: #f8f9fa; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; }
+.date-control { background-color: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #d2e3fc; }

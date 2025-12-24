@@ -1,0 +1,9 @@
+	const firebaseConfig = {
+            apiKey: "AIzaSyC9CqjVBCcmjeYAZdX3grW213s2jyMHpAw",
+            authDomain: "g40attendance.firebaseapp.com",
+            databaseURL: "https://g40attendance-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "g40attendance",
+            storageBucket: "g40attendance.firebasestorage.app",
+            messagingSenderId: "487009872314",
+            appId: "1:487009872314:web:9842ea3115be17e5505583"
+        };
