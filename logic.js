@@ -20,35 +20,79 @@ const auth = getAuth(app);
 let currentClassData = [];
 let currentClassName = "";
 
-// 1. AUTHENTICATION
-document.getElementById('loginBtn').addEventListener('click', () => {
-    const email = document.getElementById('emailInput').value;
-    const pass = document.getElementById('passwordInput').value;
-    signInWithEmailAndPassword(auth, email, pass).catch(e => {
-        document.getElementById('loginError').innerText = e.message;
-        document.getElementById('loginError').style.display = 'block';
+// ==========================================
+// 1. AUTHENTICATION & REDIRECTS
+// ==========================================
+const loginBtn = document.getElementById('loginBtn');
+if(loginBtn) {
+    loginBtn.addEventListener('click', () => {
+        const email = document.getElementById('emailInput').value;
+        const pass = document.getElementById('passwordInput').value;
+        signInWithEmailAndPassword(auth, email, pass).catch(e => {
+            document.getElementById('loginError').innerText = e.message;
+            document.getElementById('loginError').style.display = 'block';
+        });
+    });
+}
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    signOut(auth).then(() => {
+        window.location.href = "index.html"; // Always go to home on logout
     });
 });
 
-document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
-
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Simple check: If logged in, show dashboard
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('dashboardScreen').style.display = 'block';
-        document.getElementById('historyDate').valueAsDate = new Date();
-        loadAdminPanel();
-        loadScheduleForSelectedDate();
+        // User is logged in
+        if(document.getElementById('loginScreen')) {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'block';
+        }
+
+        // INIT PAGE LOGIC BASED ON WHAT ELEMENTS EXIST
+        if(document.getElementById('bookDay')) loadAdminPanel(); // We are on Booking Page
+        if(document.getElementById('historyDate')) {           // We are on Monitor Page
+            document.getElementById('historyDate').valueAsDate = new Date();
+            loadScheduleForSelectedDate();
+        }
+
     } else {
-        document.getElementById('loginScreen').style.display = 'block';
-        document.getElementById('dashboardScreen').style.display = 'none';
+        // User is logged out
+        const isBookingPage = window.location.pathname.includes("booking.html");
+        
+        if (isBookingPage) {
+            // Protect the booking page! Kick them out if not logged in.
+            window.location.href = "index.html";
+        } else {
+            // Show login screen on index page
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('dashboardScreen').style.display = 'none';
+        }
     }
 });
 
-// 2. ADMIN BOOKING
-function loadAdminPanel() { updateAvailableTimeSlots(); loadScheduleList(); }
-document.getElementById('bookDay').addEventListener('change', () => { updateAvailableTimeSlots(); loadScheduleList(); });
+// ==========================================
+// 2. ADMIN BOOKING LOGIC (Only runs if elements exist)
+// ==========================================
+function loadAdminPanel() { 
+    updateAvailableTimeSlots(); 
+    loadScheduleList(); 
+}
+
+const bookDayEl = document.getElementById('bookDay');
+if(bookDayEl) {
+    bookDayEl.addEventListener('change', () => { updateAvailableTimeSlots(); loadScheduleList(); });
+    
+    document.getElementById('addClassBtn').addEventListener('click', () => {
+        const day = document.getElementById('bookDay').value;
+        const time = document.getElementById('bookTime').value;
+        const name = document.getElementById('bookName').value;
+        const dur = document.getElementById('bookDuration').value;
+        if(!name || time==="Full") return;
+        set(ref(db, `class_schedule/${day}/${time.replace(":","")}`), { name, start_time:time, duration:parseInt(dur) })
+        .then(() => { alert("Booked!"); updateAvailableTimeSlots(); });
+    });
+}
 
 function updateAvailableTimeSlots() {
     const day = document.getElementById('bookDay').value;
@@ -74,16 +118,6 @@ function updateAvailableTimeSlots() {
     });
 }
 
-document.getElementById('addClassBtn').addEventListener('click', () => {
-    const day = document.getElementById('bookDay').value;
-    const time = document.getElementById('bookTime').value;
-    const name = document.getElementById('bookName').value;
-    const dur = document.getElementById('bookDuration').value;
-    if(!name || time==="Full") return;
-    set(ref(db, `class_schedule/${day}/${time.replace(":","")}`), { name, start_time:time, duration:parseInt(dur) })
-    .then(() => { alert("Booked!"); updateAvailableTimeSlots(); });
-});
-
 function loadScheduleList() {
     const day = document.getElementById('bookDay').value;
     const list = document.getElementById('bookingList');
@@ -102,8 +136,27 @@ function loadScheduleList() {
     });
 }
 
-// 3. MONITOR & HISTORY
-document.getElementById('historyDate').addEventListener('change', loadScheduleForSelectedDate);
+// ==========================================
+// 3. MONITOR LOGIC (Only runs if elements exist)
+// ==========================================
+const historyDateEl = document.getElementById('historyDate');
+if(historyDateEl) {
+    historyDateEl.addEventListener('change', loadScheduleForSelectedDate);
+    
+    document.getElementById('classSelector').addEventListener('change', (e) => {
+        const v = e.target.value; if(!v) return;
+        const [start, dur, name] = v.split(",");
+        loadAttendance(parseInt(start.split(":")[0]), name, parseInt(dur));
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+        if(!currentClassData.length) return alert("No data");
+        const date = document.getElementById('historyDate').value;
+        let csv = "data:text/csv;charset=utf-8,Name,ID,Time\n" + currentClassData.map(r=>`${r.Name},${r.ID},${r.Time}`).join("\n");
+        const a = document.createElement("a"); a.href=encodeURI(csv); a.download=`Attendance_${currentClassName}_${date}.csv`; a.click();
+    });
+}
+
 function loadScheduleForSelectedDate() {
     const dateInput = document.getElementById('historyDate').value;
     if(!dateInput) return;
@@ -124,12 +177,6 @@ function loadScheduleForSelectedDate() {
         sel.dispatchEvent(new Event('change'));
     });
 }
-
-document.getElementById('classSelector').addEventListener('change', (e) => {
-    const v = e.target.value; if(!v) return;
-    const [start, dur, name] = v.split(",");
-    loadAttendance(parseInt(start.split(":")[0]), name, parseInt(dur));
-});
 
 function loadAttendance(startHour, className, duration) {
     document.getElementById('activeClassTitle').innerText = `📂 ${className}`;
@@ -155,28 +202,24 @@ function loadAttendance(startHour, className, duration) {
     });
 }
 
-document.getElementById('exportBtn').addEventListener('click', () => {
-    if(!currentClassData.length) return alert("No data");
-    const date = document.getElementById('historyDate').value;
-    let csv = "data:text/csv;charset=utf-8,Name,ID,Time\n" + currentClassData.map(r=>`${r.Name},${r.ID},${r.Time}`).join("\n");
-    const a = document.createElement("a"); a.href=encodeURI(csv); a.download=`Attendance_${currentClassName}_${date}.csv`; a.click();
-});
-
-// 4. SIMULATOR (Restored)
-document.getElementById('simBtn').addEventListener('click', () => {
-    const name = document.getElementById('simName').value;
-    const id = document.getElementById('simID').value;
-    if(!name || !id) return alert("Please enter Name and ID");
-    
-    push(ref(db, 'attendance_logs'), {
-        name: name,
-        student_id: id,
-        rfid_tag: "SIM_" + Math.floor(Math.random() * 1000),
-        timestamp: Date.now()
-    }).then(() => {
-        document.getElementById('simStatus').innerText = `✅ Checked in: ${name}`;
-        setTimeout(() => document.getElementById('simStatus').innerText="", 3000);
-        document.getElementById('simName').value = "";
-        document.getElementById('simID').value = "";
+// 4. SIMULATOR
+const simBtn = document.getElementById('simBtn');
+if(simBtn) {
+    simBtn.addEventListener('click', () => {
+        const name = document.getElementById('simName').value;
+        const id = document.getElementById('simID').value;
+        if(!name || !id) return alert("Please enter Name and ID");
+        
+        push(ref(db, 'attendance_logs'), {
+            name: name,
+            student_id: id,
+            rfid_tag: "SIM_" + Math.floor(Math.random() * 1000),
+            timestamp: Date.now()
+        }).then(() => {
+            document.getElementById('simStatus').innerText = `✅ Checked in: ${name}`;
+            setTimeout(() => document.getElementById('simStatus').innerText="", 3000);
+            document.getElementById('simName').value = "";
+            document.getElementById('simID').value = "";
+        });
     });
-});
+}
