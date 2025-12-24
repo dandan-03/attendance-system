@@ -3,42 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G40 Attendance System</title>
+    <title>Amir's Secure System</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="loginScreen">
-        <h2>🔒 Secure Login</h2>
+        <h2 style="color:#1a73e8;">🔒 Secure Login</h2>
         <input type="email" id="emailInput" placeholder="Lecturer Email" />
         <input type="password" id="passwordInput" placeholder="Password" />
-        <button id="loginBtn">Log In</button>
+        <button id="loginBtn" style="background:#1a73e8; color:white;">Log In</button>
         <p id="loginError" style="color:red; display:none;"></p>
     </div>
 
     <div id="dashboardScreen">
-        <h1>🏫 Lecture Hall Management</h1>
-        <button id="logoutBtn">Log Out</button>
-        <div style="clear:both; margin-bottom: 20px;"></div>
-
-        <div class="card" style="margin-bottom: 20px; border-left: 5px solid #ffc107;">
-            <h2>👥 Manage Who Has Access</h2>
-            
-            <div id="unlockPanel">
-                <p>⚠️ <b>Restricted Area</b></p>
-                <p>Please confirm your password to manage users.</p>
-                <input type="password" id="reauthPassword" placeholder="Enter your password again" style="max-width: 300px;">
-                <button id="unlockBtn" style="background:#ffc107; color:black; max-width: 200px;">Unlock Panel</button>
-            </div>
-
-            <div id="accessPanel">
-                <div style="display:flex; gap:10px; margin-bottom:15px; padding:10px; background:#f9f9f9;">
-                    <input type="email" id="newAdminEmail" placeholder="New User Email">
-                    <input type="password" id="newAdminPass" placeholder="Password">
-                    <button id="addAdminBtn" style="background:#28a745;">Add User</button>
-                </div>
-                <h4>Authorized Users (Whitelist)</h4>
-                <div id="adminList">Loading...</div>
+        
+        <div class="header">
+            <h1>🏫 Lecture Hall Management</h1>
+            <div class="header-controls">
+                <button id="settingsBtn" title="Manage Users">⚙️</button>
+                <button id="logoutBtn">Log Out</button>
             </div>
         </div>
 
@@ -61,7 +45,7 @@
                 </div>
                 <label>Subject</label>
                 <input type="text" id="bookName" placeholder="e.g. Circuit Design">
-                <button id="addClassBtn" style="background:#6610f2;">➕ Book Slot</button>
+                <button id="addClassBtn" style="background:#6610f2; color:white;">➕ Book Slot</button>
                 <hr>
                 <div id="bookingList">Loading...</div>
             </div>
@@ -76,9 +60,34 @@
                 <label>Classes:</label>
                 <select id="classSelector"><option value="">-- No classes --</option></select>
                 <h3 id="activeClassTitle" style="color:#1a73e8;">Waiting...</h3>
-                <button id="exportBtn" style="background:#28a745;">📥 Download CSV</button>
+                <button id="exportBtn" style="background:#28a745; color:white;">📥 Download CSV</button>
                 <h4>Present: <span id="count" style="color:#1a73e8;">0</span></h4>
                 <ul id="attendanceList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" id="closeSettings">&times;</span>
+            <h2 style="margin-top:0;">👥 Manage Access</h2>
+            
+            <div id="unlockPanel">
+                <p>⚠️ <b>Restricted Area</b></p>
+                <p>Verify your password to manage users.</p>
+                <input type="password" id="reauthPassword" placeholder="Enter your password">
+                <button id="unlockBtn" style="background:#ffc107; color:black;">Unlock Panel</button>
+            </div>
+
+            <div id="accessPanel">
+                <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <label><b>Add New User</b></label>
+                    <input type="email" id="newAdminEmail" placeholder="Email">
+                    <input type="password" id="newAdminPass" placeholder="Password">
+                    <button id="addAdminBtn" style="background:#28a745; color:white;">Add User</button>
+                </div>
+                <h4>Authorized Users</h4>
+                <div id="adminList" style="max-height: 200px; overflow-y: auto;">Loading...</div>
             </div>
         </div>
     </div>
