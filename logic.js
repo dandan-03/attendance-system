@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, push, set, remove, query, orderByChild, startAt, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, reauthenticateWithCredential, EmailAuthProvider, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // 🔴 PASTE CONFIG HERE
 const firebaseConfig = {
@@ -20,7 +20,7 @@ const auth = getAuth(app);
 let currentClassData = [];
 let currentClassName = "";
 
-// 1. LOGIN
+// 1. AUTHENTICATION
 document.getElementById('loginBtn').addEventListener('click', () => {
     const email = document.getElementById('emailInput').value;
     const pass = document.getElementById('passwordInput').value;
@@ -32,102 +32,21 @@ document.getElementById('loginBtn').addEventListener('click', () => {
 
 document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, (user) => {
     if (user) {
-        // SECURITY CHECK (Updated to your manual backdoor or DB check)
-        const whitelistRef = ref(db, `authorized_users/${user.uid}`);
-        const snapshot = await get(whitelistRef);
-
-        // NOTE: I kept the backdoor for your email here just in case!
-        if (snapshot.exists() || user.email === "mtdanial@student.usm.my") { 
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('dashboardScreen').style.display = 'block';
-            document.getElementById('historyDate').valueAsDate = new Date();
-            loadAdminPanel();
-            loadScheduleForSelectedDate();
-        } else {
-            alert("🚫 Access Denied.");
-            signOut(auth);
-        }
+        // Simple check: If logged in, show dashboard
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboardScreen').style.display = 'block';
+        document.getElementById('historyDate').valueAsDate = new Date();
+        loadAdminPanel();
+        loadScheduleForSelectedDate();
     } else {
         document.getElementById('loginScreen').style.display = 'block';
         document.getElementById('dashboardScreen').style.display = 'none';
     }
 });
 
-// 2. SETTINGS MODAL & USER MANAGEMENT
-const modal = document.getElementById('settingsModal');
-
-// Open Modal
-document.getElementById('settingsBtn').addEventListener('click', () => {
-    modal.style.display = 'flex';
-    // Reset the lock state every time you open it for security
-    document.getElementById('unlockPanel').style.display = 'block';
-    document.getElementById('accessPanel').style.display = 'none';
-    document.getElementById('reauthPassword').value = "";
-});
-
-// Close Modal
-document.getElementById('closeSettings').addEventListener('click', () => {
-    modal.style.display = 'none';
-});
-
-// Close if clicked outside box
-window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
-    }
-}
-
-// Unlock Logic
-document.getElementById('unlockBtn').addEventListener('click', () => {
-    const user = auth.currentUser;
-    const pass = document.getElementById('reauthPassword').value;
-    const credential = EmailAuthProvider.credential(user.email, pass);
-    
-    reauthenticateWithCredential(user, credential).then(() => {
-        document.getElementById('unlockPanel').style.display = 'none';
-        document.getElementById('accessPanel').style.display = 'block';
-        loadUserList();
-    }).catch(() => alert("❌ Incorrect Password"));
-});
-
-// Add User
-document.getElementById('addAdminBtn').addEventListener('click', () => {
-    const newEmail = document.getElementById('newAdminEmail').value;
-    const newPass = document.getElementById('newAdminPass').value;
-    if(!newEmail || !newPass) return alert("Enter details");
-
-    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
-    const secondaryAuth = getAuth(secondaryApp);
-
-    createUserWithEmailAndPassword(secondaryAuth, newEmail, newPass).then((userCred) => {
-        set(ref(db, `authorized_users/${userCred.user.uid}`), { email: newEmail, added_by: auth.currentUser.email });
-        alert(`✅ User ${newEmail} created!`);
-        document.getElementById('newAdminEmail').value = "";
-        document.getElementById('newAdminPass').value = "";
-        signOut(secondaryAuth);
-    }).catch((e) => alert("Error: " + e.message));
-});
-
-function loadUserList() {
-    const listDiv = document.getElementById('adminList');
-    onValue(ref(db, 'authorized_users'), (snapshot) => {
-        listDiv.innerHTML = "";
-        snapshot.forEach(child => {
-            const data = child.val();
-            const div = document.createElement('div');
-            div.className = 'user-item';
-            div.innerHTML = `<span>👤 ${data.email}</span><button class="remove-user-btn">Revoke</button>`;
-            div.querySelector('button').addEventListener('click', () => {
-                if(confirm(`Block ${data.email}?`)) remove(ref(db, `authorized_users/${child.key}`));
-            });
-            listDiv.appendChild(div);
-        });
-    });
-}
-
-// 3. ADMIN BOOKING (Same as before)
+// 2. ADMIN BOOKING
 function loadAdminPanel() { updateAvailableTimeSlots(); loadScheduleList(); }
 document.getElementById('bookDay').addEventListener('change', () => { updateAvailableTimeSlots(); loadScheduleList(); });
 
@@ -183,7 +102,7 @@ function loadScheduleList() {
     });
 }
 
-// 4. MONITOR (Same as before)
+// 3. MONITOR & HISTORY
 document.getElementById('historyDate').addEventListener('change', loadScheduleForSelectedDate);
 function loadScheduleForSelectedDate() {
     const dateInput = document.getElementById('historyDate').value;
@@ -241,4 +160,23 @@ document.getElementById('exportBtn').addEventListener('click', () => {
     const date = document.getElementById('historyDate').value;
     let csv = "data:text/csv;charset=utf-8,Name,ID,Time\n" + currentClassData.map(r=>`${r.Name},${r.ID},${r.Time}`).join("\n");
     const a = document.createElement("a"); a.href=encodeURI(csv); a.download=`Attendance_${currentClassName}_${date}.csv`; a.click();
+});
+
+// 4. SIMULATOR (Restored)
+document.getElementById('simBtn').addEventListener('click', () => {
+    const name = document.getElementById('simName').value;
+    const id = document.getElementById('simID').value;
+    if(!name || !id) return alert("Please enter Name and ID");
+    
+    push(ref(db, 'attendance_logs'), {
+        name: name,
+        student_id: id,
+        rfid_tag: "SIM_" + Math.floor(Math.random() * 1000),
+        timestamp: Date.now()
+    }).then(() => {
+        document.getElementById('simStatus').innerText = `✅ Checked in: ${name}`;
+        setTimeout(() => document.getElementById('simStatus').innerText="", 3000);
+        document.getElementById('simName').value = "";
+        document.getElementById('simID').value = "";
+    });
 });
