@@ -198,6 +198,9 @@ function loadAttendance(startHour, className, duration) {
             }
         });
         document.getElementById('count').innerText = count;
+        document.getElementById('total_student_text').innerText = count;
+        document.getElementById('present_text').innerText = count;
+        document.getElementById('absent_text').innerText = 20 - count; //20 is temporary
     });
 }
 
@@ -222,4 +225,6 @@ if(simBtn) {
         });
     });
 }
+
+// KHAIRUL get attendance
 
