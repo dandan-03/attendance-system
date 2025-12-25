@@ -187,18 +187,25 @@ function loadAttendance(startHour, className, duration) {
 
     onValue(query(ref(db, 'attendance_logs'), orderByChild('timestamp'), startAt(start)), (snap) => {
         const list = document.getElementById('attendanceList'); list.innerHTML="";
-        let count=0; currentClassData=[];
+        let count=0, currentClassData=[], already_noted=[];
         snap.forEach(c => {
             const d = c.val();
+
+            if(already_noted.indexOf(d.rfid_tag) !== -1) { //checks if already noted based on student id
+                return
+            } else {
+                already_noted.push(d.rfid_tag)
+            }
+
             if(d.timestamp < end) {
                 const time = new Date(d.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
                 list.innerHTML += `<li><b>${d.name}</b> <span>${time}</span></li>`;
                 currentClassData.push({Name:d.name, ID:d.student_id, Time:time});
+                console.log(currentClassData)
                 count++;
             }
         });
         document.getElementById('count').innerText = count;
-        // document.getElementById('total_student_text').innerText = 5;
         document.getElementById('present_text').innerText = count;
         document.getElementById('absent_text').innerText = 5 - count; //5 is total student
     });
@@ -225,6 +232,3 @@ if(simBtn) {
         });
     });
 }
-
-// KHAIRUL get attendance
-
