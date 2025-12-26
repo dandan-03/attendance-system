@@ -143,7 +143,11 @@ if(historyDateEl) {
     historyDateEl.addEventListener('change', loadScheduleForSelectedDate);
     
     document.getElementById('classSelector').addEventListener('change', (e) => {
-        const v = e.target.value; if(!v) return;
+        const v = e.target.value; console.log(`here ${v}`);
+        if(!v) {
+            loadAttendance(0, 'No Class', 0);
+            return;
+        }
         const [start, dur, name] = v.split(",");
         loadAttendance(parseInt(start.split(":")[0]), name, parseInt(dur));
     });
@@ -166,7 +170,7 @@ function loadScheduleForSelectedDate() {
     const sel = document.getElementById('classSelector');
     onValue(ref(db, `class_schedule/${dayIdx}`), (snap) => {
         sel.innerHTML = "";
-        if(!snap.exists()) { sel.innerHTML="<option value=''>No classes</option>"; return; }
+        if(!snap.exists()) { sel.innerHTML="<option value=''>No classes</option>"; sel.dispatchEvent(new Event('change')); return; }
         snap.forEach(c => {
             const d = c.val();
             const op = document.createElement('option');
