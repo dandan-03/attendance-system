@@ -1,16 +1,18 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, push, set, remove, query, orderByChild, startAt, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, push, set, remove, query, orderByChild, startAt, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+
 const firebaseConfig = {
-            apiKey: "AIzaSyC9CqjVBCcmjeYAZdX3grW213s2jyMHpAw",
-            authDomain: "g40attendance.firebaseapp.com",
-            databaseURL: "https://g40attendance-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "g40attendance",
-            storageBucket: "g40attendance.firebasestorage.app",
-            messagingSenderId: "487009872314",
-            appId: "1:487009872314:web:9842ea3115be17e5505583"
-        };
+  apiKey: "AIzaSyD_htAAKN1dv7fsOkO0g8IxgQRsDuIiyu4",
+  authDomain: "rfid-attendance-30745.firebaseapp.com",
+  databaseURL: "https://rfid-attendance-30745-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "rfid-attendance-30745",
+  storageBucket: "rfid-attendance-30745.firebasestorage.app",
+  messagingSenderId: "860028054162",
+  appId: "1:860028054162:web:f3b05e9a5c6733bae0944b",
+  measurementId: "G-XMZEQML8B9"
+};
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
@@ -20,7 +22,7 @@ let currentClassData = [];
 let currentClassName = "";
 
 // ==========================================
-// 1. AUTHENTICATION & REDIRECTS
+// 1. AUTHENTICATION 
 // ==========================================
 const loginBtn = document.getElementById('loginBtn');
 if(loginBtn) {
@@ -36,34 +38,25 @@ if(loginBtn) {
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
     signOut(auth).then(() => {
-        window.location.href = "index.html"; // Always go to home on logout
+        window.location.href = "index.html"; 
     });
 });
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // User is logged in
         if(document.getElementById('loginScreen')) {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('dashboardScreen').style.display = 'block';
         }
-
-        // INIT PAGE LOGIC BASED ON WHAT ELEMENTS EXIST
-        if(document.getElementById('bookDay')) loadAdminPanel(); // We are on Booking Page
-        if(document.getElementById('historyDate')) {           // We are on Monitor Page
+        if(document.getElementById('bookDay')) loadAdminPanel(); 
+        if(document.getElementById('historyDate')) {           
             document.getElementById('historyDate').valueAsDate = new Date();
             loadScheduleForSelectedDate();
         }
-
     } else {
-        // User is logged out
         const isBookingPage = window.location.pathname.includes("booking.html");
-        
-        if (isBookingPage) {
-            // Protect the booking page! Kick them out if not logged in.
-            window.location.href = "index.html";
-        } else {
-            // Show login screen on index page
+        if (isBookingPage) window.location.href = "index.html";
+        else {
             document.getElementById('loginScreen').style.display = 'block';
             document.getElementById('dashboardScreen').style.display = 'none';
         }
@@ -71,7 +64,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ==========================================
-// 2. ADMIN BOOKING LOGIC (Only runs if elements exist)
+// 2. ADMIN BOOKING 
 // ==========================================
 function loadAdminPanel() { 
     updateAvailableTimeSlots(); 
@@ -85,7 +78,7 @@ if(bookDayEl) {
     document.getElementById('addClassBtn').addEventListener('click', () => {
         const day = document.getElementById('bookDay').value;
         const time = document.getElementById('bookTime').value;
-        const name = document.getElementById('bookName').value;
+        const name = document.getElementById('bookName').value; // IMPORTANT: Name must match 'StdInfo' course keys (e.g., "EEE270")
         const dur = document.getElementById('bookDuration').value;
         if(!name || time==="Full") return;
         set(ref(db, `class_schedule/${day}/${time.replace(":","")}`), { name, start_time:time, duration:parseInt(dur) })
@@ -136,28 +129,37 @@ function loadScheduleList() {
 }
 
 // ==========================================
-// 3. MONITOR LOGIC (Only runs if elements exist)
+// 3. MONITOR LOGIC 
 // ==========================================
 const historyDateEl = document.getElementById('historyDate');
 if(historyDateEl) {
     historyDateEl.addEventListener('change', loadScheduleForSelectedDate);
     
     document.getElementById('classSelector').addEventListener('change', (e) => {
-        const v = e.target.value; console.log(`here ${v}`);
+        const v = e.target.value; 
         if(!v) {
-            loadAttendance(0, 'No Class', 0);
+            resetMonitorDisplay();
             return;
         }
         const [start, dur, name] = v.split(",");
-        loadAttendance(parseInt(start.split(":")[0]), name, parseInt(dur));
+        loadAttendance(start, name, parseInt(dur));
     });
 
     document.getElementById('exportBtn').addEventListener('click', () => {
         if(!currentClassData.length) return alert("No data");
         const date = document.getElementById('historyDate').value;
-        let csv = "data:text/csv;charset=utf-8,Name,ID,Time\n" + currentClassData.map(r=>`${r.Name},${r.ID},${r.Time}`).join("\n");
+        let csv = "data:text/csv;charset=utf-8,Name,ID,Clock In,Status\n" + currentClassData.map(r=>`${r.Name},${r.ID},${r.Time},${r.Status}`).join("\n");
         const a = document.createElement("a"); a.href=encodeURI(csv); a.download=`Attendance_${currentClassName}_${date}.csv`; a.click();
     });
+}
+
+function resetMonitorDisplay() {
+    document.getElementById('activeClassTitle').innerText = "Waiting...";
+    document.getElementById('attendanceList').innerHTML = "";
+    document.getElementById('count').innerText = "0";
+    document.getElementById('total_student_text').innerText = "-";
+    document.getElementById('present_text').innerText = "-";
+    document.getElementById('absent_text').innerText = "-";
 }
 
 function loadScheduleForSelectedDate() {
@@ -168,101 +170,136 @@ function loadScheduleForSelectedDate() {
     document.getElementById('dayLabel').innerText = "Day: " + days[dayIdx];
 
     const sel = document.getElementById('classSelector');
+    // NOTE: This still assumes 'class_schedule' exists in the DB!
     onValue(ref(db, `class_schedule/${dayIdx}`), (snap) => {
         sel.innerHTML = "";
         if(!snap.exists()) { sel.innerHTML="<option value=''>No classes</option>"; sel.dispatchEvent(new Event('change')); return; }
         snap.forEach(c => {
             const d = c.val();
             const op = document.createElement('option');
-            op.value = `${d.start_time},${d.duration},${d.name}`; op.innerText = `${d.start_time} - ${d.name}`;
+            // Passing the Class Name (e.g., EEE270) to the load function
+            op.value = `${d.start_time},${d.duration},${d.name}`; 
+            op.innerText = `${d.start_time} - ${d.name}`;
             sel.appendChild(op);
         });
         sel.dispatchEvent(new Event('change'));
     });
 }
 
-function loadAttendance(startHour, className, duration) {
+async function loadAttendance(startTimeStr, className, duration) {
     document.getElementById('activeClassTitle').innerText = `📂 ${className}`;
     currentClassName = className;
-    const d = new Date(document.getElementById('historyDate').value);
-    d.setHours(startHour,0,0,0);
-    const start = d.getTime();
-    const end = start + (duration * 3600000);
+    
+    const dateInput = document.getElementById('historyDate').value; // Format: YYYY-MM-DD
+    
+    // 1. Calculate Class Time Window (e.g., 09:00 to 11:00)
+    const startHour = parseInt(startTimeStr.split(":")[0]);
+    const endHour = startHour + duration;
 
-    //////////////////////////////GET WHO IS IN THIS CLASS/COURSE////////////////////////////////////////////////////////
+    // 2. Fetch All Students (StdInfo) to find who is enrolled
+    const studentSnapshot = await get(ref(db, 'StdInfo'));
+    if(!studentSnapshot.exists()) { alert("No student data (StdInfo) found!"); return; }
 
-    let rfids_in_this_course = [];
-
-    const subject_ref = ref(db, `subject/${className.toLowerCase()}`);
-    console.log(className.toLowerCase())
-
-    onValue(subject_ref, (snapshot) => {
-
-        snapshot.forEach((childSnapshot) => {
-
-            // const childKey = childSnapshot.key;
-            // const childData = childSnapshot.val();
-
-            rfids_in_this_course.push(Number(childSnapshot.key));
-
-        });
+    let enrolledStudents = [];
+    
+    studentSnapshot.forEach(child => {
+        const studentData = child.val();
+        const rfid = child.key;
+        // Check if student has the course key set to true (e.g., EEE270: true)
+        if(studentData.course && studentData.course[className] === true) {
+            enrolledStudents.push({
+                rfid: rfid,
+                name: studentData.name,
+                matric: studentData.matric
+            });
+        }
     });
 
-    console.log(rfids_in_this_course)
+    console.log("Enrolled in " + className, enrolledStudents);
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // 3. Fetch Attendance for TODAY (attendance/Electronic/YYYY-MM-DD)
+    const attRef = ref(db, `attendance/Electronic/${dateInput}`);
+    
+    onValue(attRef, (snap) => {
+        const list = document.getElementById('attendanceList'); 
+        list.innerHTML = "";
+        currentClassData = [];
+        let presentCount = 0;
 
-    onValue(query(ref(db, 'attendance_logs'), orderByChild('timestamp'), startAt(start)), (snap) => {
-        const list = document.getElementById('attendanceList'); list.innerHTML="";
-        let count=0, currentClassData=[], already_noted=[];
-        snap.forEach(c => {
-            const d = c.val();
+        const attendanceData = snap.val() || {}; // might be null if no one scanned today
 
-            if(already_noted.indexOf(d.rfid_tag) !== -1) { //checks if already noted based on student id
-                return
-            } else {
-                already_noted.push(d.rfid_tag)
+        // 4. Match Students with Attendance Logs
+        enrolledStudents.forEach(student => {
+            const studentLog = attendanceData[student.rfid];
+            let status = "Absent";
+            let timeStr = "--:--";
+            let style = "color:red";
+
+            if (studentLog && studentLog.clock_in) {
+                // Parse Clock In Time (e.g., "16:34:00")
+                const logHour = parseInt(studentLog.clock_in.split(":")[0]);
+                
+                // Check if they clocked in during class hours
+                if(logHour >= startHour && logHour < endHour) {
+                    status = "Present";
+                    timeStr = studentLog.clock_in;
+                    style = "color:green";
+                    presentCount++;
+                } else {
+                    status = "Wrong Time"; // Scanned, but outside class hours
+                    timeStr = studentLog.clock_in;
+                    style = "color:orange";
+                }
             }
-            console.log(d.rfid_tag)
 
-            if(!rfids_in_this_course.includes(d.rfid_tag)) { //checks if the student is enrolled in the class
-                return
+            // Render to list
+            if(status === "Present") {
+                list.innerHTML += `<li style="border-left: 5px solid green">
+                    <div><b>${student.name}</b> <small>(${student.matric})</small></div> 
+                    <span>${timeStr}</span>
+                </li>`;
             }
-            console.log('is in this course')
 
-            if(d.timestamp < end) {
-                const time = new Date(d.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-                list.innerHTML += `<li><b>${d.name}</b> <span>${time}</span></li>`;
-                currentClassData.push({Name:d.name, ID:d.student_id, Time:time});
-                console.log(currentClassData)
-                count++;
+            // Save for export
+            if(status === "Present") {
+                currentClassData.push({Name: student.name, ID: student.matric, Time: timeStr, Status: status});
             }
         });
-        document.getElementById('count').innerText = count;
-        document.getElementById('total_student_text').innerText = rfids_in_this_course.length;
-        document.getElementById('present_text').innerText = count;
-        document.getElementById('absent_text').innerText = rfids_in_this_course.length - count;
+
+        // Update Summary Cards
+        document.getElementById('count').innerText = presentCount;
+        document.getElementById('total_student_text').innerText = enrolledStudents.length;
+        document.getElementById('present_text').innerText = presentCount;
+        document.getElementById('absent_text').innerText = enrolledStudents.length - presentCount;
     });
 }
 
-// 4. SIMULATOR
+// ==========================================
+// 4. SIMULATOR 
+// ==========================================
 const simBtn = document.getElementById('simBtn');
 if(simBtn) {
-    simBtn.addEventListener('click', () => {
-        const name = document.getElementById('simName').value;
-        const id = document.getElementById('simID').value;
-        if(!name || !id) return alert("Please enter Name and ID");
+    simBtn.addEventListener('click', async () => {
+        const rfidInput = document.getElementById('simID').value; 
+        const nameInput = document.getElementById('simName').value;
+
+        if(!rfidInput) return alert("Please enter an RFID (e.g., C348762D)");
+
+        // Generate Current Date and Time Strings
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const timeStr = now.toTimeString().split(' ')[0]; // HH:MM:SS
+
+        // Update to new path: attendance/Electronic/YYYY-MM-DD/RFID
+        const logPath = `attendance/Electronic/${dateStr}/${rfidInput}`;
         
-        push(ref(db, 'attendance_logs'), {
-            name: name,
-            student_id: id,
-            rfid_tag: "SIM_" + Math.floor(Math.random() * 1000),
-            timestamp: Date.now()
-        }).then(() => {
-            document.getElementById('simStatus').innerText = `✅ Checked in: ${name}`;
-            setTimeout(() => document.getElementById('simStatus').innerText="", 3000);
-            document.getElementById('simName').value = "";
-            document.getElementById('simID').value = "";
+        // We use 'update' so we don't overwrite existing data (like clock_out if it exists)
+        await update(ref(db, logPath), {
+            clock_in: timeStr,
+            name: nameInput || "Unknown"
         });
+
+        document.getElementById('simStatus').innerText = `✅ Checked in: ${rfidInput} at ${timeStr}`;
+        setTimeout(() => document.getElementById('simStatus').innerText="", 3000);
     });
 }
