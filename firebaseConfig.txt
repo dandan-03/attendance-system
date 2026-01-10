@@ -1,9 +1,10 @@
-	const firebaseConfig = {
-            apiKey: "AIzaSyC9CqjVBCcmjeYAZdX3grW213s2jyMHpAw",
-            authDomain: "g40attendance.firebaseapp.com",
-            databaseURL: "https://g40attendance-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "g40attendance",
-            storageBucket: "g40attendance.firebasestorage.app",
-            messagingSenderId: "487009872314",
-            appId: "1:487009872314:web:9842ea3115be17e5505583"
-        };
+const firebaseConfig = {
+  apiKey: "AIzaSyD_htAAKN1dv7fsOkO0g8IxgQRsDuIiyu4",
+  authDomain: "rfid-attendance-30745.firebaseapp.com",
+  databaseURL: "https://rfid-attendance-30745-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "rfid-attendance-30745",
+  storageBucket: "rfid-attendance-30745.firebasestorage.app",
+  messagingSenderId: "860028054162",
+  appId: "1:860028054162:web:f3b05e9a5c6733bae0944b",
+  measurementId: "G-XMZEQML8B9"
+};
