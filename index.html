@@ -30,27 +30,66 @@
             
             <div class="card">
                 <h2>📊 Attendance Monitor</h2>
+                
                 <div class="date-control">
                     <label style="font-weight:bold; color:#1a73e8;">Select Date:</label>
                     <input type="date" id="historyDate">
                     <small id="dayLabel" style="display:block; margin-top:5px; color:#555;">...</small>
                 </div>
-                <label>Classes:</label>
-                <select id="classSelector"><option value="">-- No classes --</option></select>
-                <h3 id="activeClassTitle" style="color:#1a73e8;">Waiting...</h3>
-                <button id="exportBtn" style="background:#28a745; color:white;">📥 Download CSV</button>
+
+                <label>Select Class:</label>
+                <select id="classSelector">
+                    <option value="">-- No classes --</option>
+                </select>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                    <h3 id="activeClassTitle" style="color:#1a73e8; margin:0;">Waiting...</h3>
+                    <button id="exportBtn" style="background:#28a745; color:white; width:auto; font-size:0.8rem;">📥 CSV</button>
+                </div>
+                
+                <hr>
+                
                 <h4>Present: <span id="count" style="color:#1a73e8;">0</span></h4>
-                <ul id="attendanceList"></ul>
+                <ul id="attendanceList">
+                    </ul>
             </div>
 
-            <div class="card">
-                <h2>📡 Attendance Summary</h2>
-                <p>Total Students Enrolled</p>
-                <h3 id="total_student_text">5</h3>
-                <p>Present (Scanned In)</p>
-                <h3 id="present_text" style="color: #28a745;">Select a class</h3>
-                <p>Absent</p>
-                <h3 id="absent_text" style="color: crimson;">Select a class</h3>
+            <div style="flex:1; display:flex; flex-direction:column; gap:20px;">
+                
+                <div class="card" style="background:#fff3e0; border: 1px solid #ffe0b2;">
+                    <h2 style="color:#e65100; margin-top:0;">🎓 Class Control</h2>
+                    <p style="margin-bottom:5px;">Early Exit Status:</p>
+                    <h3 id="exitStatus" style="margin:0 0 15px 0; color:red;">LOCKED</h3>
+                    
+                    <button id="unlockBtn" style="background:#ff9800; color:white;">
+                        🔓 Unlock Early Exit
+                    </button>
+                    <small style="display:block; margin-top:10px; color:#666;">
+                        Click this if you dismiss the class early.
+                    </small>
+                </div>
+
+                <div class="card">
+                    <h2>📡 Statistics</h2>
+                    
+                    <div style="margin-bottom:15px;">
+                        <p style="margin:0; color:#666;">Total Enrolled</p>
+                        <h3 id="total_student_text" style="margin:0; font-size:2rem;">-</h3>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:1; background:#f0fff4; padding:10px; border-radius:8px; border-left:4px solid #28a745;">
+                            <p style="margin:0; font-size:0.8rem; color:#28a745;">Present</p>
+                            <h3 id="present_text" style="margin:0; color:#28a745;">0</h3>
+                        </div>
+                        
+                        <div style="flex:1; background:#fff5f5; padding:10px; border-radius:8px; border-left:4px solid #dc3545;">
+                            <p style="margin:0; font-size:0.8rem; color:#dc3545;">Absent</p>
+                            <h3 id="absent_text" style="margin:0; color:#dc3545;">0</h3>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>

@@ -1,36 +1,220 @@
-body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f0f2f5; color: #333; }
-
-/* HEADER */
-.header {
-    background: white; padding: 15px 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0;
+/* ================= GLOBAL STYLES ================= */
+body { 
+    font-family: 'Segoe UI', sans-serif; 
+    margin: 0; 
+    background-color: #f0f2f5; 
+    color: #333; 
 }
-.header h1 { margin: 0; font-size: 1.5rem; color: #1a73e8; }
-.header-controls { display: flex; gap: 10px; align-items: center; }
 
-/* NAV BUTTONS */
+/* ================= HEADER ================= */
+.header {
+    background: white; 
+    padding: 15px 30px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    position: sticky; 
+    top: 0;
+    z-index: 100;
+}
+.header h1 { 
+    margin: 0; 
+    font-size: 1.5rem; 
+    color: #1a73e8; 
+}
+.header-controls { 
+    display: flex; 
+    gap: 10px; 
+    align-items: center; 
+}
+
+/* ================= BUTTONS & INPUTS ================= */
 .nav-btn {
-    text-decoration: none; background: #007bff; color: white; padding: 8px 16px;
-    border-radius: 20px; font-weight: bold; font-size: 0.9rem; transition: 0.2s;
+    text-decoration: none; 
+    background: #007bff; 
+    color: white; 
+    padding: 8px 16px;
+    border-radius: 20px; 
+    font-weight: bold; 
+    font-size: 0.9rem; 
+    transition: 0.2s;
 }
 .nav-btn:hover { opacity: 0.9; }
 
-/* MAIN LAYOUT */
-.container { display: flex; gap: 20px; flex-wrap: wrap; padding: 30px; max-width: 1200px; margin: auto; }
-.card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 300px; }
+input, select { 
+    width: 100%; 
+    padding: 10px; 
+    margin: 5px 0; 
+    border: 1px solid #ccc; 
+    border-radius: 6px; 
+    box-sizing: border-box; 
+}
 
-input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-button { width: 100%; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
+button { 
+    width: 100%; 
+    padding: 10px; 
+    border-radius: 6px; 
+    border: none; 
+    font-weight: bold; 
+    cursor: pointer; 
+    margin-top: 5px; 
+    transition: opacity 0.2s;
+}
 button:hover { opacity: 0.9; }
 
-/* LIST ITEMS */
-.schedule-item { background: #f8f9fa; border-left: 4px solid #6610f2; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
-.delete-btn { background: #dc3545; color: white; width: auto; padding: 4px 10px; font-size: 0.8em; }
+#logoutBtn { 
+    background-color: #dc3545; 
+    color: white; 
+    padding: 8px 16px; 
+    border-radius: 20px; 
+    width: auto;
+}
+
+/* ================= GENERAL CONTAINERS ================= */
+.container { 
+    display: flex; 
+    gap: 20px; 
+    flex-wrap: wrap; 
+    padding: 30px; 
+    max-width: 1200px; 
+    margin: auto; 
+}
+.card { 
+    background: white; 
+    padding: 25px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    flex: 1; 
+    min-width: 300px; 
+}
+
+/* ================= NEW LAYOUT: SIDE-BY-SIDE DASHBOARD ================= */
+.dashboard-row {
+    display: flex;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+    align-items: flex-start; 
+}
+
+/* Left Column: Booking Form */
+.col-booking {
+    flex: 1; 
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Right Column: Schedule List */
+.col-schedule {
+    flex: 1.5; 
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    min-height: 400px; 
+}
+
+/* Responsive: Stack columns on small screens */
+@media (max-width: 768px) {
+    .dashboard-row { flex-direction: column; }
+    .col-booking, .col-schedule { width: 100%; margin-bottom: 20px; }
+}
+
+/* ================= LIST ITEMS (SCHEDULE & ATTENDANCE) ================= */
+.schedule-item { 
+    background: #f8f9fa; 
+    border-left: 4px solid #6610f2; 
+    padding: 12px; 
+    margin-bottom: 10px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-radius: 4px; 
+}
+
+.delete-btn { 
+    background: #dc3545; 
+    color: white; 
+    width: auto; 
+    padding: 6px 12px; 
+    font-size: 0.85em; 
+    border-radius: 4px;
+}
 
 ul { list-style: none; padding: 0; }
-li { background: #f8f9fa; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; }
-.date-control { background-color: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #d2e3fc; }
+li { margin-bottom: 5px; } /* Helper for list items created in JS */
 
-#loginScreen { max-width: 400px; margin: 100px auto; text-align: center; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-top: 50px; }
+/* ================= CONTROLS & TOGGLES ================= */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+    font-weight: 600;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.date-control { 
+    background-color: #e8f0fe; 
+    padding: 15px; 
+    border-radius: 8px; 
+    margin-bottom: 15px; 
+    border: 1px solid #d2e3fc; 
+}
+
+/* ================= MODAL DIALOG (DELETE CONFIRMATION) ================= */
+.modal-overlay {
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); 
+    display: none; 
+    justify-content: center; 
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+.modal-box {
+    background: white; 
+    padding: 30px; 
+    border-radius: 12px; 
+    width: 90%; max-width: 400px; 
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-box h3 { margin-top: 0; color: #dc3545; }
+
+.modal-btn { 
+    margin: 5px; 
+    padding: 10px 15px; 
+    border: none; 
+    cursor: pointer; 
+    border-radius: 6px; 
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+.btn-red { background: #dc3545; color: white; }
+.btn-grey { background: #6c757d; color: white; }
+.btn-blue { background: #007bff; color: white; }
+
+/* ================= LOGIN SCREEN ================= */
+#loginScreen { 
+    max-width: 400px; 
+    margin: 80px auto; 
+    text-align: center; 
+    background: white; 
+    padding: 40px; 
+    border-radius: 12px; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+}
 #dashboardScreen { display: none; }
-#logoutBtn { background-color: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; width: auto;}

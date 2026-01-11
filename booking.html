@@ -16,33 +16,92 @@
         </div>
     </div>
 
-    <div class="container">
-        <div class="card" style="max-width: 800px; margin: auto;">
-            <h2>Add / Remove Classes</h2>
-            <label>Select Day</label>
-            <select id="bookDay">
-                <option value="1">Monday</option>
-                <option value="2">Tuesday</option>
-                <option value="3">Wednesday</option>
-                <option value="4">Thursday</option>
-                <option value="5">Friday</option>
-                <option value="6">Saturday</option>
-                <option value="0">Sunday</option>
-            </select>
-            <div style="display:flex; gap:10px;">
-                <div style="flex:1"><label>Start Time</label><select id="bookTime"></select></div>
-                <div style="flex:1"><label>Duration (Hrs)</label><input type="number" id="bookDuration" value="2" min="1" max="4"></div>
+    <div class="dashboard-row">
+        
+        <div class="col-booking">
+            <h2 style="margin-top:0; color:#1a73e8;">➕ Add New Class</h2>
+            
+            <div class="toggle-container">
+                <label>Booking Type:</label>
+                <select id="bookingType">
+                    <option value="repeat">🔄 Repeat Weekly</option>
+                    <option value="once">📅 One Time Only</option>
+                </select>
             </div>
-            <label>Subject</label>
-            <input type="text" id="bookName" placeholder="e.g. EEE430 (please use course code only)">
-            <button id="addClassBtn" style="background:#6610f2; color:white;">➕ Book Slot</button>
-            <hr>
-            <h4>Current Schedule:</h4>
-            <div id="bookingList">Loading...</div>
+
+            <div id="dayInputGroup">
+                <label>Select Day of Week</label>
+                <select id="bookDay">
+                    <option value="1">Monday</option>
+                    <option value="2">Tuesday</option>
+                    <option value="3">Wednesday</option>
+                    <option value="4">Thursday</option>
+                    <option value="5">Friday</option>
+                    <option value="6">Saturday</option>
+                    <option value="0">Sunday</option>
+                </select>
+            </div>
+
+            <div id="dateInputGroup" style="display:none;">
+                <label>Select Specific Date</label>
+                <input type="date" id="bookSpecificDate">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <div style="flex:1">
+                    <label>Start Time</label>
+                    <select id="bookTime">
+                        <option>Loading...</option>
+                    </select>
+                </div>
+                <div style="flex:1">
+                    <label>Duration (Hrs)</label>
+                    <input type="number" id="bookDuration" value="2" min="1" max="4">
+                </div>
+            </div>
+
+            <label style="margin-top:10px; display:block;">Subject Code</label>
+            <input type="text" id="bookName" placeholder="e.g. EEE430 (Must match Student Data)">
+            
+            <button id="addClassBtn" style="background:#6610f2; color:white; width:100%; margin-top:20px; padding:12px;">➕ Book Slot</button>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc;">
+                <h3>🎓 Lecturer Control</h3>
+                <p>Current Status: <span id="exitStatus" style="font-weight:bold; color:red;">LOCKED</span></p>
+                <button id="unlockBtn" style="background:#ff9800; color:white;">🔓 Unlock Early Exit</button>
+            </div>
+        </div>
+
+        <div class="col-schedule">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0; color:#1a73e8;">📅 Schedule List</h2>
+                
+                <div style="text-align:right;">
+                    <label style="font-size:12px; display:block;">View Schedule For:</label>
+                    <input type="date" id="viewDate" style="padding:5px; width:auto;">
+                </div>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #eee;">
+            
+            <div id="bookingList">
+                <p style="text-align:center; color:#888;">Select a date to view classes...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>⚠️ Delete Class?</h3>
+            <p>You are deleting a <b>Repeating Class</b>.</p>
+            <p style="font-size:0.9em; color:#666;">Do you want to delete the entire series or just for this specific date?</p>
+            
+            <button id="delSingleBtn" class="modal-btn btn-blue">Delete This Date Only</button>
+            <button id="delAllBtn" class="modal-btn btn-red">Delete Entire Series</button>
+            <button id="cancelDelBtn" class="modal-btn btn-grey">Cancel</button>
         </div>
     </div>
 
     <script type="module" src="logic.js"></script>
 </body>
-
 </html>
