@@ -410,11 +410,15 @@ if(delAllBtn) {
 function updateTimeSlots() {
     const timeSelect = document.getElementById('bookTime');
     if(!timeSelect) return;
+    
     timeSelect.innerHTML = "";
-    for(let i=8; i<20; i++) { 
+    
+    // Loop from 0 (Midnight) to 23 (11 PM)
+    for(let i=0; i<24; i++) { 
         const t = (i<10?"0":"")+i+":00";
         const op = document.createElement('option');
-        op.value = t; op.innerText = t;
+        op.value = t; 
+        op.innerText = t;
         timeSelect.appendChild(op);
     }
 }
