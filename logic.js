@@ -1,9 +1,8 @@
 // =======================================================
-// 1. IMPORTS (Standard Modular SDK)
+// 1. IMPORTS
 // =======================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
 // =======================================================
 // 2. CONFIGURATION (PASTE YOUR KEYS HERE)
@@ -22,127 +21,54 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getDatabase(app);
 
 // =======================================================
-// 3. AUTHENTICATION CHECK (Fixes Login Issue)
+// 3. LOGIN BUTTON LOGIC
 // =======================================================
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("User is logged in:", user.email);
-    // User is signed in, load the schedule data
-    loadScheduleData(); 
-  } else {
-    console.log("No user detected. Redirecting...");
-    // If no user, kick them back to login page
-    window.location.href = "index.html"; 
-  }
-});
+const loginBtn = document.getElementById('login-btn'); // Make sure this matches your HTML ID
 
-// Logout Button Logic
-const logoutBtn = document.getElementById('logout-btn'); // Check your HTML ID
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        signOut(auth).then(() => {
-            window.location.href = "index.html";
-        }).catch((error) => {
-            console.error("Sign out error", error);
-        });
-    });
-}
+if (loginBtn) {
+    loginBtn.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevents page refresh
 
-// =======================================================
-// 4. SCHEDULE & CALENDAR LOGIC (Simplified)
-// =======================================================
-function loadScheduleData() {
-    console.log("Loading schedule data from Firebase...");
-    // (Your existing code to populate the calendar goes here)
-    // For now, this confirms the page is working.
-}
+        // Get values from HTML inputs
+        const email = document.getElementById('email').value;       // Match HTML ID
+        const password = document.getElementById('password').value; // Match HTML ID
 
-// =======================================================
-// 5. DELETE & EXCEPTION LOGIC (The New Feature)
-// =======================================================
-
-// A. Handle "Delete This Date Only" (Creates Exception)
-const btnSingle = document.getElementById('btn-delete-single');
-if (btnSingle) {
-    btnSingle.addEventListener('click', function() {
-        
-        const dateInput = document.getElementById('schedule-date-picker');
-        const subjectInput = document.getElementById('input-subject-code');
-
-        // Validation
-        if(!dateInput || !subjectInput) {
-            console.error("HTML Error: Missing input IDs 'schedule-date-picker' or 'input-subject-code'");
+        if (!email || !password) {
+            alert("Please enter both email and password.");
             return;
         }
 
-        const selectedDate = dateInput.value; 
-        const subjectCode = subjectInput.value;    
-        
-        if(!selectedDate || !subjectCode) {
-            alert("Error: Please select a valid date and subject.");
-            return;
-        }
+        console.log("Attempting login...");
 
-        // Construct Path: class_exceptions / YYYY-MM-DD / CourseName
-        const exceptionPath = `class_exceptions/${selectedDate}/${subjectCode}`;
-        const dbRef = ref(db, exceptionPath);
-
-        // Write "true" to create the exception
-        set(dbRef, true)
-            .then(() => {
-                alert(`SUCCESS: Class ${subjectCode} cancelled for ${selectedDate} only.`);
-                closeModal(); 
-                // Optional: Refresh calendar here
+        // Firebase Login Function
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                // Signed in successfully
+                const user = userCredential.user;
+                console.log("Login Successful:", user.email);
+                alert("Login Successful!");
+                
+                // Redirect to the Dashboard
+                window.location.href = "dashboard.html"; // CHANGE THIS to your actual dashboard filename
             })
             .catch((error) => {
-                console.error("Error adding exception:", error);
-                alert("Failed to cancel class: " + error.message);
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.error("Login Failed:", errorCode, errorMessage);
+                alert("Login Failed: " + errorMessage);
             });
     });
 }
 
-// B. Handle "Delete Entire Series" (Deletes from Schedule)
-const btnSeries = document.getElementById('btn-delete-series');
-if (btnSeries) {
-    btnSeries.addEventListener('click', function() {
-        
-        // >>> IMPORTANT: You must get these values dynamically from your UI <<<
-        // Currently hardcoded as placeholders
-        const dayIndex = 1; // Example: Monday (Needs to come from your clicked event)
-        const classKey = document.getElementById('hidden-class-id').value; // Example hidden input
-        
-        if(!classKey) {
-            alert("Error: Could not identify the class series to delete.");
-            return;
-        }
-
-        if(confirm("Are you sure? This will delete the class for EVERY week.")) {
-            const seriesPath = `class_schedule/${dayIndex}/${classKey}`;
-            const dbRef = ref(db, seriesPath);
-
-            remove(dbRef)
-                .then(() => {
-                    alert("Entire class series deleted.");
-                    closeModal();
-                })
-                .catch((error) => {
-                    console.error("Delete failed:", error);
-                    alert("Failed to delete series.");
-                });
-        }
-    });
-}
-
-// Helper: Close Modal
-function closeModal() {
-    // Make sure this matches your CSS class for the popup
-    const modal = document.querySelector('.modal-container'); 
-    if (modal) {
-        modal.style.display = 'none';
-    } else {
-        console.warn("Could not find .modal-container to close");
-    }
-}
+// =======================================================
+// 4. AUTO-REDIRECT (Optional)
+// =======================================================
+// If user is already logged in, send them straight to dashboard
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("User already logged in. Redirecting...");
+    window.location.href = "dashboard.html"; // CHANGE THIS to your actual dashboard filename
+  }
+});
