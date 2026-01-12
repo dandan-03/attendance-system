@@ -21,7 +21,7 @@ const auth = getAuth(app);
 let currentClassData = [];
 let currentClassName = "";
 let deleteTarget = null; 
-let isEarlyExitOpen = false; // <--- CRITICAL FIX: Tracks lock state safely
+let isEarlyExitOpen = false; // Tracks lock state safely
 
 // =======================================================
 // 1. AUTHENTICATION & PAGE ROUTING
@@ -142,9 +142,12 @@ function loadClassDropdown(dateStr) {
         snap.forEach(c => {
             const d = c.val();
             let show = false;
+            // Filter logic
             if (d.type === 'repeat') show = true;
             if (d.type === 'once' && d.date === dateStr) show = true;
 
+            // Note: We don't filter exceptions here (in dropdown) to keep it simple, 
+            // but you could add the same exception logic here if needed.
             if (show) {
                 const op = document.createElement('option');
                 op.value = `${d.start_time},${d.duration},${d.name}`;
@@ -340,13 +343,19 @@ if(addClassBtn) {
     });
 }
 
-function loadScheduleList(dateStr) {
+// >>> NEW: Updated Schedule Loader with Exception Handling
+async function loadScheduleList(dateStr) {
     const list = document.getElementById('bookingList');
     if(!list) return;
     
     const dayIdx = new Date(dateStr).getDay();
     list.innerHTML = "<p style='text-align:center;'>Loading...</p>";
 
+    // 1. Fetch Exceptions first
+    const exceptionSnap = await get(ref(db, `class_exceptions/${dateStr}`));
+    const exceptions = exceptionSnap.val() || {};
+
+    // 2. Fetch Schedule
     onValue(ref(db, `class_schedule/${dayIdx}`), (snap) => {
         list.innerHTML = "";
         if(!snap.exists()) { list.innerHTML = "<p style='text-align:center;'>No classes found.</p>"; return; }
@@ -355,12 +364,21 @@ function loadScheduleList(dateStr) {
             const d = c.val();
             let show = false;
             
-            if (d.type === 'repeat') show = true;
+            // Check Repeating + Exception
+            if (d.type === 'repeat') {
+                if (exceptions[c.key] === true) {
+                    show = false; // It is cancelled/blacklisted for today
+                } else {
+                    show = true;
+                }
+            }
+
+            // Check One-Time
             if (d.type === 'once' && d.date === dateStr) show = true;
 
             if (show) {
                 const end = parseInt(d.start_time.split(":")[0]) + d.duration;
-                let endH = end % 24; // Handle midnight crossover
+                let endH = end % 24; 
                 const endStr = (endH<10?"0":"")+endH+":00";
                 
                 const typeLabel = d.type === 'repeat' ? '<span style="color:blue">🔄 Weekly</span>' : '<span style="color:orange">📅 Once</span>';
@@ -399,6 +417,7 @@ function handleDeleteClick(dayIdx, key, data) {
 // Modal Listeners
 const delAllBtn = document.getElementById('delAllBtn');
 if(delAllBtn) {
+    // 1. Delete Entire Series (Standard)
     delAllBtn.addEventListener('click', () => {
         if(deleteTarget) {
             remove(ref(db, `class_schedule/${deleteTarget.dayIdx}/${deleteTarget.key}`))
@@ -406,9 +425,18 @@ if(delAllBtn) {
         }
     });
     
+    // 2. Delete Single Day (Exception Logic)
     document.getElementById('delSingleBtn').addEventListener('click', () => {
-        alert("To delete a single day of a repeating series, we need to add an 'Exception' feature. For now, this is not enabled.");
-        document.getElementById('deleteModal').style.display = 'none';
+        if (!deleteTarget) return;
+        const dateStr = document.getElementById('viewDate').value;
+        
+        // Write Exception
+        set(ref(db, `class_exceptions/${dateStr}/${deleteTarget.key}`), true)
+        .then(() => {
+            alert("Class cancelled for " + dateStr + " only.");
+            document.getElementById('deleteModal').style.display = 'none';
+            loadScheduleList(dateStr); // Refresh list immediately
+        });
     });
     
     document.getElementById('cancelDelBtn').addEventListener('click', () => {
