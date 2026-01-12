@@ -25,6 +25,7 @@
                 <button id="logoutBtn">Log Out</button>
                 <a href="https://amirfirdausismail0.github.io" class="nav-btn" style="background:#28a745; text-decoration:none;">
                     🌱 Environment
+                </a>
             </div>
         </div>
 
@@ -101,4 +102,5 @@
 </body>
 
 </html>
+
 
