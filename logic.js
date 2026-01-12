@@ -20,7 +20,8 @@ const auth = getAuth(app);
 // Global Variables
 let currentClassData = [];
 let currentClassName = "";
-let deleteTarget = null; // For the delete modal
+let deleteTarget = null; 
+let isEarlyExitOpen = false; // <--- CRITICAL FIX: Tracks lock state safely
 
 // =======================================================
 // 1. AUTHENTICATION & PAGE ROUTING
@@ -30,10 +31,14 @@ if (loginBtn) {
     loginBtn.addEventListener('click', () => {
         const email = document.getElementById('emailInput').value;
         const pass = document.getElementById('passwordInput').value;
+        
+        loginBtn.innerText = "Logging in...";
+        
         signInWithEmailAndPassword(auth, email, pass).catch(e => {
             const err = document.getElementById('loginError');
             err.innerText = "Error: " + e.message;
             err.style.display = 'block';
+            loginBtn.innerText = "Log In";
         });
     });
 }
@@ -57,15 +62,15 @@ onAuthStateChanged(auth, (user) => {
         if (document.getElementById('historyDate')) {
             document.getElementById('historyDate').value = todayStr;
             initMonitorPage();
-            initLecturerControl(); // Start the listener for the remote button
+            initLecturerControl(); 
         }
 
         // If on Booking Page (booking.html)
         if (document.getElementById('viewDate')) {
             document.getElementById('viewDate').value = todayStr;
             updateTimeSlots();
-            loadScheduleList(todayStr); // Load today's schedule by default
-            initLecturerControl(); // Also allow control from booking page
+            loadScheduleList(todayStr); 
+            initLecturerControl(); 
         }
 
     } else {
@@ -73,8 +78,10 @@ onAuthStateChanged(auth, (user) => {
         if (window.location.pathname.includes("booking.html")) {
             window.location.href = "index.html";
         } else {
-            document.getElementById('loginScreen').style.display = 'block';
-            document.getElementById('dashboardScreen').style.display = 'none';
+            const loginScreen = document.getElementById('loginScreen');
+            const dashScreen = document.getElementById('dashboardScreen');
+            if(loginScreen) loginScreen.style.display = 'block';
+            if(dashScreen) dashScreen.style.display = 'none';
         }
     }
 });
@@ -134,7 +141,6 @@ function loadClassDropdown(dateStr) {
 
         snap.forEach(c => {
             const d = c.val();
-            // Filter: If One-Time, does date match? If Repeat, always show.
             let show = false;
             if (d.type === 'repeat') show = true;
             if (d.type === 'once' && d.date === dateStr) show = true;
@@ -154,7 +160,7 @@ async function loadAttendance(startTimeStr, className, duration) {
     currentClassName = className;
     const dateInput = document.getElementById('historyDate').value;
 
-    // 1. GET ENROLLED LIST (The "Expected" Students)
+    // 1. GET ENROLLED LIST
     const studentSnapshot = await get(ref(db, 'StdInfo'));
     let enrolledStudents = {}; 
     let totalEnrolledCount = 0;
@@ -162,7 +168,6 @@ async function loadAttendance(startTimeStr, className, duration) {
     if(studentSnapshot.exists()) {
         studentSnapshot.forEach(child => {
             const data = child.val();
-            // Check enrollment: course -> EEE430 -> true
             if(data.course && data.course[className] === true) {
                 enrolledStudents[child.key] = { 
                     name: data.name,
@@ -176,47 +181,52 @@ async function loadAttendance(startTimeStr, className, duration) {
         });
     }
 
-    // 2. GET ACTUAL SCANS (The "Reality")
+    // 2. GET ACTUAL SCANS
     const attRef = ref(db, `attendance/Electronic/${dateInput}/${className}`);
     
     onValue(attRef, (snap) => {
         const list = document.getElementById('attendanceList'); 
         list.innerHTML = "";
-        currentClassData = []; // Clear export data
+        currentClassData = []; 
         
         const scanData = snap.val() || {};
-        let presentCount = 0;
+        let presentCount = 0;   // Completed (In + Out)
+        let ongoingCount = 0;   // Incomplete (In only)
 
         // A. Match Enrolled Students
         Object.keys(enrolledStudents).forEach(uid => {
             const student = enrolledStudents[uid];
-            
-            if (scanData[uid]) {
-                // Found a scan!
-                student.status = "Present";
-                student.time = scanData[uid].clock_in;
-                student.style = "border-left: 5px solid green; background:#f0fff4;";
-                presentCount++;
-                scanData[uid].handled = true; // Mark as processed
+            const log = scanData[uid];
+
+            if (log) {
+                if (log.clock_out) {
+                    // HAS CLOCK OUT -> TRULY PRESENT
+                    student.status = "Present";
+                    student.time = `${log.clock_in} - ${log.clock_out}`;
+                    student.style = "border-left: 5px solid green; background:#f0fff4;";
+                    presentCount++;
+                } else {
+                    // ONLY CLOCK IN -> INCOMPLETE
+                    student.status = "Incomplete";
+                    student.time = `${log.clock_in} (Active)`;
+                    student.style = "border-left: 5px solid orange; background:#fff3cd;";
+                    ongoingCount++; 
+                }
+                scanData[uid].handled = true; 
             }
 
-            // Render Row
             renderRow(list, student.name, student.matric, student.time, student.style);
-            
-            // Add to Export List
             currentClassData.push({name: student.name, id: student.matric, status: student.status, time: student.time});
         });
 
-        // B. Detect Intruders (Scans not in enrolled list)
+        // B. Detect Intruders
         let intruderCount = 0;
         Object.keys(scanData).forEach(uid => {
             if (!scanData[uid].handled) {
                 intruderCount++;
                 const log = scanData[uid];
-                
-                // Add Intruder Row at the TOP
                 const div = document.createElement('div');
-                div.className = "schedule-item"; // Re-use styling
+                div.className = "schedule-item"; 
                 div.style = "border-left: 5px solid #dc3545; background: #ffe6e6; color: #721c24; margin-bottom:5px;";
                 div.innerHTML = `
                     <div><b>⚠️ UNREGISTERED: ${log.name || "Unknown"}</b><br><small>ID: ${uid}</small></div>
@@ -227,15 +237,20 @@ async function loadAttendance(startTimeStr, className, duration) {
         });
 
         // C. Update Stats
-        const absentCount = totalEnrolledCount - presentCount;
-        document.getElementById('count').innerText = presentCount;
+        const absentCount = totalEnrolledCount - (presentCount + ongoingCount);
+        
+        document.getElementById('count').innerText = presentCount; 
         
         const totalEl = document.getElementById('total_student_text');
         const presEl = document.getElementById('present_text');
         const absEl = document.getElementById('absent_text');
 
         if(totalEl) totalEl.innerText = totalEnrolledCount;
-        if(presEl) presEl.innerText = presentCount;
+        
+        if(presEl) {
+            presEl.innerHTML = `${presentCount} <small style='color:orange; font-size:0.6em;'>(+${ongoingCount} active)</small>`;
+        }
+        
         if(absEl) absEl.innerText = absentCount;
 
         if (intruderCount > 0) {
@@ -264,7 +279,6 @@ function resetMonitorUI() {
 // 3. SCHEDULING LOGIC (booking.html)
 // =======================================================
 
-// View Date Change Listener
 const viewDateInput = document.getElementById('viewDate');
 if(viewDateInput) {
     viewDateInput.addEventListener('change', (e) => {
@@ -272,7 +286,6 @@ if(viewDateInput) {
     });
 }
 
-// Toggle "Repeat" vs "Once" UI
 const bookingTypeEl = document.getElementById('bookingType');
 if(bookingTypeEl) {
     bookingTypeEl.addEventListener('change', (e) => {
@@ -286,7 +299,6 @@ if(bookingTypeEl) {
     });
 }
 
-// ADD CLASS BUTTON
 const addClassBtn = document.getElementById('addClassBtn');
 if(addClassBtn) {
     addClassBtn.addEventListener('click', () => {
@@ -320,7 +332,6 @@ if(addClassBtn) {
             date: dateVal // Empty if repeat
         }).then(() => { 
             alert("Class Booked!"); 
-            // Refresh list if viewing same day
             const currentViewDate = document.getElementById('viewDate').value;
             if (new Date(currentViewDate).getDay() == dayIdx) {
                 loadScheduleList(currentViewDate);
@@ -344,13 +355,14 @@ function loadScheduleList(dateStr) {
             const d = c.val();
             let show = false;
             
-            // Logic: Show Repeats + Show Specifics for THIS date
             if (d.type === 'repeat') show = true;
             if (d.type === 'once' && d.date === dateStr) show = true;
 
             if (show) {
                 const end = parseInt(d.start_time.split(":")[0]) + d.duration;
-                const endStr = (end<10?"0":"")+end+":00";
+                let endH = end % 24; // Handle midnight crossover
+                const endStr = (endH<10?"0":"")+endH+":00";
+                
                 const typeLabel = d.type === 'repeat' ? '<span style="color:blue">🔄 Weekly</span>' : '<span style="color:orange">📅 Once</span>';
                 
                 const div = document.createElement('div'); 
@@ -363,7 +375,6 @@ function loadScheduleList(dateStr) {
                     <button class="delete-btn">Delete</button>
                 `;
                 
-                // Attach Delete Event
                 div.querySelector('.delete-btn').addEventListener('click', () => {
                     handleDeleteClick(dayIdx, c.key, d);
                 });
@@ -374,14 +385,12 @@ function loadScheduleList(dateStr) {
     });
 }
 
-// DELETE HANDLING
 function handleDeleteClick(dayIdx, key, data) {
     if (data.type === 'once') {
         if(confirm("Delete this one-time class?")) {
             remove(ref(db, `class_schedule/${dayIdx}/${key}`));
         }
     } else {
-        // Show Modal for Repeating
         deleteTarget = { dayIdx, key };
         document.getElementById('deleteModal').style.display = 'flex';
     }
@@ -398,7 +407,7 @@ if(delAllBtn) {
     });
     
     document.getElementById('delSingleBtn').addEventListener('click', () => {
-        alert("Single-instance deletion for repeating classes requires creating an 'Exception' logic (Advanced). Cancelling action.");
+        alert("To delete a single day of a repeating series, we need to add an 'Exception' feature. For now, this is not enabled.");
         document.getElementById('deleteModal').style.display = 'none';
     });
     
@@ -410,15 +419,12 @@ if(delAllBtn) {
 function updateTimeSlots() {
     const timeSelect = document.getElementById('bookTime');
     if(!timeSelect) return;
-    
     timeSelect.innerHTML = "";
-    
-    // Loop from 0 (Midnight) to 23 (11 PM)
+    // 00:00 to 23:00 (24 Hour Cycle)
     for(let i=0; i<24; i++) { 
         const t = (i<10?"0":"")+i+":00";
         const op = document.createElement('option');
-        op.value = t; 
-        op.innerText = t;
+        op.value = t; op.innerText = t;
         timeSelect.appendChild(op);
     }
 }
@@ -428,42 +434,50 @@ function updateTimeSlots() {
 // =======================================================
 
 function initLecturerControl() {
+    console.log(">>> SYSTEM: Initializing Lecturer Control Module...");
+
     const unlockBtn = document.getElementById('unlockBtn');
     const exitStatus = document.getElementById('exitStatus');
 
     if(!unlockBtn) return; // Not present on page
 
     // 1. LISTEN to Firebase
+    // This updates the GLOBAL Variable 'isEarlyExitOpen' directly.
     onValue(ref(db, 'Classroom/Control/early_exit'), (snapshot) => {
-        const isUnlocked = snapshot.val();
-        if (isUnlocked === true) {
+        const dbValue = snapshot.val();
+        isEarlyExitOpen = (dbValue === true); // Sync Variable
+        console.log(">>> FIREBASE: Early Exit is", isEarlyExitOpen ? "OPEN" : "CLOSED");
+
+        if (isEarlyExitOpen) {
             if(exitStatus) {
                 exitStatus.innerText = "UNLOCKED (Students can leave)";
                 exitStatus.style.color = "green";
             }
             unlockBtn.innerText = "🔒 Lock Attendance";
-            unlockBtn.style.background = "#6c757d"; // Grey
+            unlockBtn.style.background = "#6c757d"; 
         } else {
             if(exitStatus) {
                 exitStatus.innerText = "LOCKED (Time Restricted)";
                 exitStatus.style.color = "red";
             }
             unlockBtn.innerText = "🔓 Unlock Early Exit";
-            unlockBtn.style.background = "#ff9800"; // Orange
+            unlockBtn.style.background = "#ff9800"; 
         }
     });
 
     // 2. SEND Command
-    // Remove old listeners to prevent duplicates if function called twice
-    const newBtn = unlockBtn.cloneNode(true);
-    unlockBtn.parentNode.replaceChild(newBtn, unlockBtn);
+    // Checks the GLOBAL Variable 'isEarlyExitOpen' (Safe Method)
+    unlockBtn.onclick = function() {
+        console.log(">>> CLICK: Requesting State Change...");
 
-    newBtn.addEventListener('click', () => {
-        const currentText = newBtn.innerText;
-        if (currentText.includes("Unlock")) {
-            set(ref(db, 'Classroom/Control/early_exit'), true);
+        if (isEarlyExitOpen === false) {
+            console.log(">>> ACTION: Unlocking...");
+            set(ref(db, 'Classroom/Control/early_exit'), true)
+                .catch(e => alert("Firebase Error: " + e.message));
         } else {
-            set(ref(db, 'Classroom/Control/early_exit'), false);
+            console.log(">>> ACTION: Locking...");
+            set(ref(db, 'Classroom/Control/early_exit'), false)
+                .catch(e => alert("Firebase Error: " + e.message));
         }
-    });
+    };
 }
